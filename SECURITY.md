@@ -2,7 +2,7 @@
 
 ## Estado
 
-Aegis Vault es un proyecto en desarrollo y no ha pasado una auditoría independiente. El repositorio se mantiene privado mientras se revisan y prueban las funciones que manejan secretos.
+Aegis Vault es un proyecto público en desarrollo y no ha pasado una auditoría independiente. Publicar el código permite revisarlo; no constituye una certificación de seguridad. Las bóvedas personales se conservan localmente y no forman parte del repositorio ni del instalador.
 
 La versión 1.1.0 usa AES-256-GCM con IV aleatorio de 12 bytes y sal aleatoria de 16 bytes. Las nuevas escrituras usan PBKDF2-HMAC-SHA-256 con 600.000 iteraciones; la autenticación GCM verifica la contraseña sin guardar un verificador de menor coste. La lectura del formato 1 conserva las 310.000 iteraciones originales para poder abrir bóvedas existentes.
 

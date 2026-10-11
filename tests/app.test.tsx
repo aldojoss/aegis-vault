@@ -5,7 +5,7 @@ import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/re
 import { webcrypto } from 'node:crypto';
 import { App } from '../src/App';
 import { ElectronAPI } from '../src/electron';
-import { encryptVault } from '../src/utils/crypto';
+import { encryptVault, decryptVault } from '../src/utils/crypto';
 
 beforeEach(() => {
   localStorage.clear();
@@ -20,6 +20,30 @@ beforeEach(() => {
   } as unknown as ElectronAPI;
 });
 afterEach(() => { cleanup(); delete window.electronAPI; vi.unstubAllGlobals(); });
+
+it('saves reviewed legacy examples to trash while preserving real records', async () => {
+  const initial = { version: 1, createdAt: 1, updatedAt: 1, items: [
+    { id: 'sample-1', category: 'login' as const, title: 'Old demonstration', password: 'synthetic example secret', createdAt: 1, updatedAt: 1 },
+    { id: 'real-record', category: 'login' as const, title: 'Real record to keep', password: 'synthetic real secret', createdAt: 1, updatedAt: 1 },
+  ], settings: { autoLockMinutes: 15, clipboardClearSeconds: 30, theme: 'dark' as const, showPasswordStrength: true } };
+  const password = 'synthetic test password';
+  const payload = await encryptVault(initial, password);
+  window.electronAPI!.loadVault = async () => ({ success: true, data: JSON.stringify(payload) });
+  let written: string | undefined;
+  window.electronAPI!.saveVault = vi.fn(async value => { written = value; return { success: true }; });
+  render(<App />);
+  await screen.findByRole('heading', { name: 'Desbloquear Aegis Vault' });
+  fireEvent.change(screen.getByLabelText('Contraseña maestra'), { target: { value: password } });
+  fireEvent.click(screen.getByRole('button', { name: 'Desbloquear bóveda' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Revisar ejemplos antiguos' }));
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Old demonstration' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Mover a la papelera' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  const saved = await decryptVault(JSON.parse(written!), password);
+  expect(saved.items.find(item => item.id === 'sample-1')?.trashed).toBe(true);
+  expect(saved.items.find(item => item.id === 'real-record')).toEqual(initial.items[1]);
+  expect(saved.items).toHaveLength(2);
+});
 
 it('waits for loading before offering setup', async () => {
   let complete!: (result: { success: boolean; data: null }) => void;
@@ -56,6 +80,10 @@ it('stays in setup when disk rejects the write, and can retry successfully', asy
   fireEvent.click(screen.getByRole('button', { name: 'Crear bóveda' }));
   await screen.findByRole('button', { name: 'Nuevo elemento' });
   expect(content).toBeTruthy();
+  const created = await decryptVault(JSON.parse(content!), 'synthetic test password');
+  expect(created.items).toEqual([]);
+  expect(await screen.findByText('Tu bóveda está vacía')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Revisar ejemplos antiguos' })).toBeNull();
   cleanup();
   window.electronAPI!.loadVault = async () => ({ success: true, data: content });
   render(<App />);

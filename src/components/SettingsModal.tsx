@@ -210,7 +210,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               • Algoritmo de cifrado: <strong className="text-slate-200">AES-256-GCM</strong> autenticado con IV único de 96 bits.
             </p>
             <p className="text-slate-400">
-              • Derivación de claves: <strong className="text-slate-200">PBKDF2 (SHA-256)</strong> con 310,000 rondas (estándar OWASP).
+              • Derivación de claves: <strong className="text-slate-200">PBKDF2 (SHA-256)</strong> con 600.000 rondas al guardar. Compatible con bóvedas antiguas de 310.000 rondas.
             </p>
             {appInfo && (
               <p className="text-slate-500 pt-1 truncate">

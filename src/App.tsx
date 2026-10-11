@@ -15,6 +15,7 @@ import { PasswordGeneratorModal } from './components/PasswordGeneratorModal';
 import { SecurityAuditModal } from './components/SecurityAuditModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ChangePasswordModal } from './components/ChangePasswordModal';
+import { LegacyDemoReview } from './components/LegacyDemoReview';
 import { Toast, ToastMessage } from './components/Toast';
 
 // Icons
@@ -328,6 +329,20 @@ export const App: React.FC = () => {
   };
 
   // Save / Update Item
+  const handleTrashLegacyExamples = async (ids: string[]) => {
+    if (!vaultData || !masterPassword) return false;
+    const now = Date.now();
+    const updatedVault = { ...vaultData, updatedAt: now, items: vaultData.items.map(item =>
+      ids.includes(item.id) && /^sample-[1-7]$/.test(item.id) && !item.trashed
+        ? { ...item, trashed: true, updatedAt: now } : item
+    ) };
+    if (!await persistVault(updatedVault, masterPassword)) return false;
+    if (!unlockedRef.current) return false;
+    setVaultData(updatedVault);
+    if (selectedItemId && ids.includes(selectedItemId)) setSelectedItemId(null);
+    return true;
+  };
+
   const handleSaveItem = async (itemData: Omit<VaultItem, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!vaultData || !masterPassword) return;
 
@@ -578,6 +593,7 @@ export const App: React.FC = () => {
       />
 
       {/* 2. Main Content Layout */}
+      {!isLocked && vaultData && <LegacyDemoReview items={vaultData.items} onMoveToTrash={handleTrashLegacyExamples} />}
       {!isLocked && <div className={`flex-1 flex overflow-hidden ${pendingSaves ? "pointer-events-none" : ""}`} aria-busy={pendingSaves > 0}>
         {/* Left Sidebar */}
         <aside className="w-56 bg-[#202124] border-r border-[#323438] flex flex-col shrink-0 select-none">
@@ -796,7 +812,7 @@ export const App: React.FC = () => {
             {filteredItems.length === 0 ? (
               <div className="h-64 flex flex-col items-center justify-center text-center p-4 text-slate-500">
                 <Search className="w-8 h-8 mb-2 stroke-1" />
-                <p className="text-xs font-medium">Tu bóveda, en orden</p>
+                <p className="text-xs font-medium">{categoryCounts.all === 0 && filterCategory === 'all' && !searchQuery ? 'Tu bóveda está vacía' : 'No hay resultados'}</p>
                 <p className="text-[11px] text-slate-600 mt-0.5">
                   Añade un elemento o prueba otra búsqueda.
                 </p>

@@ -4,9 +4,15 @@ Gestor local de contraseñas para Windows. Organiza inicios de sesión, tarjetas
 
 ## Instalar
 
-Los instaladores se distribuyen en [Releases](https://github.com/aldojoss/aegis-vault/releases). El código fuente no incluye ejecutables, archivos de bóveda ni dependencias instaladas.
+Descarga el instalador de Windows desde la [última versión publicada](https://github.com/aldojoss/aegis-vault/releases/latest). Abre el archivo `Aegis-Vault-Setup-1.1.1.exe` y sigue el asistente. El instalador todavía no tiene firma digital.
 
-Después de instalar la versión 1.1.0, abre la aplicación y usa tu contraseña maestra habitual. Al cerrar la ventana, la bóveda se bloquea: al reabrir debe mostrar **Desbloquear Aegis Vault**, no pedir crear una contraseña nueva.
+En un equipo sin bóveda previa, crea y confirma tu propia contraseña maestra. La bóveda empieza vacía: no incluye cuentas de ejemplo, contraseñas predeterminadas ni perfiles personales. Usa **Nuevo elemento** para añadir tus registros. Cada persona conserva su propia bóveda local; descargar la aplicación no comparte datos con otros usuarios.
+
+Si ya usabas Aegis Vault, abre la aplicación con tu contraseña maestra habitual. Al cerrar la ventana, la bóveda se bloquea: al reabrir debe mostrar **Desbloquear Aegis Vault**, no pedir crear una contraseña nueva. Instalar una actualización conserva los registros existentes.
+
+Algunas versiones antiguas incluían registros de demostración. Si están guardados en tu bóveda, la versión 1.1.1 ofrece **Revisar ejemplos antiguos**: selecciona los que quieras mover a la papelera. Ninguno se selecciona ni elimina automáticamente; conserva los que hayas editado para uso real. Los registros permanecen en la papelera y en los respaldos cifrados hasta que decidas gestionarlos.
+
+El código fuente publicado no incluye bóvedas, exportaciones ni datos personales. Los binarios se distribuyen solo en Releases. Para compartir la app, envía el enlace de la última versión, nunca tu archivo de bóveda.
 
 ## Dónde se guardan los datos
 

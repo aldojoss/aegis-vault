@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Minus, Square, X, Shield, Lock } from 'lucide-react';
+import { version } from '../../package.json';
 
 interface TitleBarProps {
   isLocked: boolean;
@@ -32,7 +33,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ isLocked, onLockClick, vault
         <div className="flex items-center space-x-2">
           <span className="font-semibold text-xs tracking-tight text-slate-100">Aegis Vault</span>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-800/80 text-stone-300 font-mono border border-slate-700/50">
-            v1.1.0
+            v{version}
           </span>
         </div>
 
