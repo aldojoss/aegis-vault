@@ -25,15 +25,15 @@ export const TitleBar: React.FC<TitleBarProps> = ({ isLocked, onLockClick, vault
   const handleClose = () => window.electronAPI?.close();
 
   return (
-    <div className="titlebar-drag h-10 w-full bg-[#202124] border-b border-[#323438] flex items-center justify-between px-3 select-none z-50 text-slate-300">
+    <div className="app-titlebar titlebar-drag h-10 w-full bg-[#202124] border-b border-[#323438] flex items-center justify-between px-3 select-none z-50 text-slate-300">
       {/* Brand & Status */}
-      <div className="flex items-center space-x-2.5">
+      <div className="titlebar-brand flex items-center space-x-2.5">
         <div className="flex items-center justify-center w-6 h-6 rounded-md bg-[#c9d4c1] text-slate-950 font-bold shadow-sm">
           <Shield className="w-3.5 h-3.5" />
         </div>
         <div className="flex items-center space-x-2">
           <span className="font-semibold text-xs tracking-tight text-slate-100">Aegis Vault</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-800/80 text-stone-300 font-mono border border-slate-700/50">
+          <span className="titlebar-version text-[10px] px-1.5 py-0.5 rounded-full bg-slate-800/80 text-stone-300 font-mono border border-slate-700/50">
             v{version}
           </span>
         </div>
@@ -42,12 +42,12 @@ export const TitleBar: React.FC<TitleBarProps> = ({ isLocked, onLockClick, vault
         {!isLocked && (
           <button
             onClick={onLockClick}
-            className="titlebar-nodrag ml-3 flex items-center space-x-1.5 px-2 py-0.5 rounded text-[11px] bg-slate-800/70 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700/60"
+            className="titlebar-lock titlebar-nodrag ml-3 flex items-center space-x-1.5 px-2 py-0.5 rounded text-[11px] bg-slate-800/70 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700/60"
             title="Bloquear Bóveda Ahora"
           >
             <Lock className="w-3 h-3 text-amber-400" />
             <span>Bloquear</span>
-            <span className="text-slate-500 text-[10px]">({vaultItemCount})</span>
+            <span className="titlebar-count text-slate-500 text-[10px]">({vaultItemCount})</span>
           </button>
         )}
       </div>

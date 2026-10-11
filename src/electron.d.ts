@@ -14,6 +14,10 @@ export interface ElectronAPI {
   finishClose: (saved: boolean) => Promise<void>;
   getInfo: () => Promise<{ version: string; vaultPath: string }>;
   confirmLocked?: () => Promise<void>;
+  biometricStatus?: () => Promise<{ available: boolean; enabled: boolean; reason?: string }>;
+  enableBiometric?: (password: string) => Promise<{ success: boolean; canceled?: boolean; error?: string }>;
+  unlockBiometric?: () => Promise<{ success: boolean; password?: string; canceled?: boolean; error?: string }>;
+  disableBiometric?: () => Promise<{ success: boolean; error?: string }>;
 }
 
 declare global {

@@ -1,9 +1,9 @@
 {
   "name": "aegis-vault",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Gestor local de contraseñas para Windows y Android con bóveda cifrada",
   "main": "electron/main.cjs",
-  "author": "Aegis Security",
+  "author": "Aldo Aviles",
   "license": "MIT",
   "scripts": {
     "dev": "vite",

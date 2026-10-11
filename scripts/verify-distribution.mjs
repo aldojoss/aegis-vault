@@ -6,7 +6,9 @@ import { createRequire } from 'node:module';
 const demoMarker = /(?:\baldo\b|\baldo[.@-]|SAMPLE_VAULT_ITEMS|sampleVault|P@ssw0rd!Secure99_Alpha|G!tHub_K3y#9821_VaultX)/i;
 const failures = [];
 function check(name, content) {
-  if (demoMarker.test(content)) failures.push(name);
+  // The explicitly requested creator credit is allowed; legacy credential
+  // records and personal demo addresses remain forbidden.
+  if (demoMarker.test(content.replaceAll('Creado por Aldo Aviles', 'Crédito del creador'))) failures.push(name);
 }
 function visit(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { VaultSettings, VaultData } from '../types/vault';
+import { creatorCredit } from '../brand';
+import { version } from '../../package.json';
 import {
   X, Settings, Shield, Clock, Download, Upload, Key,
   CheckCircle2, AlertTriangle, FileCode, HardDrive
@@ -13,6 +15,8 @@ interface SettingsModalProps {
   onImportFile: () => Promise<void>;
   onChangeMasterPassword: () => void;
   onClose: () => void;
+  biometric?: { available: boolean; enabled: boolean; reason?: string } | null;
+  onToggleBiometric?: () => Promise<void>;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -23,9 +27,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onImportFile,
   onChangeMasterPassword,
   onClose,
+  biometric,
+  onToggleBiometric,
 }) => {
   const [appInfo, setAppInfo] = useState<{ version: string; vaultPath: string } | null>(null);
   const [showExportWarning, setShowExportWarning] = useState(false);
+  const [biometricBusy, setBiometricBusy] = useState(false);
 
   useEffect(() => {
     if (window.electronAPI) {
@@ -35,14 +42,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#191a1c]/85 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="w-full max-w-xl bg-[#242529] border border-[#383a3e] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="settings-panel w-full max-w-xl bg-[#242529] border border-[#383a3e] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-[#202124]">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-stone-300 flex items-center justify-center font-bold">
               <Settings className="w-4 h-4" />
             </div>
-            <h3 className="font-semibold text-sm text-white">Configuración y Seguridad</h3>
+            <h3 className="font-semibold text-sm text-white">Ajustes</h3>
           </div>
           <button
             onClick={onClose}
@@ -54,6 +61,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Content */}
         <div className="overflow-y-auto p-6 space-y-6 flex-1 text-slate-300">
+          {biometric && onToggleBiometric && <section className="space-y-3">
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">Desbloqueo con huella</h4>
+            <div className="p-4 rounded-lg bg-[#1b1c1f] border border-[#383a3e] space-y-3">
+              <p className="text-sm">{biometric.enabled ? 'Activado en este teléfono' : 'Entra con tu huella sin escribir la contraseña cada vez.'}</p>
+              <p className="text-xs leading-5 text-stone-400">Android puede usar huella o reconocimiento facial compatible. Conserva tu contraseña maestra para recuperar copias y usar otro dispositivo.</p>
+              {!biometric.available && <p className="text-xs text-amber-300">{biometric.reason || 'Registra una huella en los ajustes de Android para activar esta opción.'}</p>}
+              <button className="primary-action px-4 py-3 text-sm" disabled={biometricBusy || (!biometric.available && !biometric.enabled)} onClick={async () => { setBiometricBusy(true); try { await onToggleBiometric(); } finally { setBiometricBusy(false); } }}>{biometricBusy ? 'Un momento…' : biometric.enabled ? 'Desactivar huella' : 'Activar huella'}</button>
+            </div>
+          </section>}
           {/* Section: Security Timeouts */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-1.5">
@@ -98,7 +114,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   className="bg-[#121827] border border-[#414348] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-stone-400"
                 >
                   <option value={15}>15 segundos</option>
-                  <option value={30}>30 segundos (Recomendado)</option>
+                  <option value={30}>30 segundos</option>
                   <option value={60}>60 segundos</option>
                   <option value={0}>No limpiar</option>
                 </select>
@@ -204,7 +220,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {/* Section: Architecture & Storage Info */}
-          <div className="p-4 rounded-lg bg-[#090d16] border border-[#182030] text-[11px] space-y-1.5">
+          <div className="space-y-1 text-sm border-t border-stone-700 pt-5"><p className="text-stone-200">Aegis Vault <span className="text-stone-500">{version}</span></p><p className="text-stone-400">{creatorCredit}</p></div>
+          <p className="mobile-storage-note text-xs leading-5 text-stone-400">Tus registros se guardan cifrados en este teléfono. Para cambiar de dispositivo, exporta una copia cifrada antes de desinstalar.</p>
+          <div className="security-technical-details p-4 rounded-lg bg-[#090d16] border border-[#182030] text-[11px] space-y-1.5">
             <span className="font-semibold text-slate-300 block">Arquitectura de Seguridad:</span>
             <p className="text-slate-400">
               • Algoritmo de cifrado: <strong className="text-slate-200">AES-256-GCM</strong> autenticado con IV único de 96 bits.

@@ -30,5 +30,7 @@
     </application>
 
     <!-- Permissions -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" android:maxSdkVersion="27" />
 
 </manifest>

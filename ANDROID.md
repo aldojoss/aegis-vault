@@ -10,6 +10,16 @@ Al salir de la aplicación se bloquea. La selección de archivos mediante el sel
 
 Guarda un respaldo cifrado antes de desinstalar, borrar los datos de la app o cambiar de teléfono. Las copias automáticas del sistema están deshabilitadas; Aegis no recupera una bóveda si pierdes su contraseña maestra.
 
+## Desbloquear con huella
+
+Desde la versión 1.2.1, entra con tu contraseña maestra y abre **Ajustes → Activar huella**. Confirma la activación con el diálogo de Android. Después, al reabrir o bloquear la app, toca **Desbloquear con huella**. La contraseña maestra sigue disponible si cancelas o si la biometría falla.
+
+Requiere una huella registrada y biometría fuerte compatible; algunos teléfonos también permiten reconocimiento facial de esa clase. Android protege una copia cifrada de la contraseña mediante una clave no exportable de Android Keystore que exige autenticación en cada uso. La app no obtiene ni guarda tu huella.
+
+Conserva la contraseña maestra para abrir tus respaldos o migrar a otro teléfono. Cambiarla desactiva la huella: vuelve a activarla en Ajustes. Si cambias las huellas registradas o Android invalida la clave, entra con la contraseña y activa la huella de nuevo. Puedes desactivarla en cualquier momento.
+
+Para actualizar desde el APK anterior, instala el nuevo sobre la app existente, sin desinstalarla. La firma se conserva y Android mantiene la bóveda.
+
 ## Pasar registros desde Windows
 
 1. En Windows, desbloquea Aegis Vault y abre Configuración. Exporta una copia cifrada `.aegis`.
@@ -32,6 +42,8 @@ cd android
 ```
 
 La compilación de depuración usa un identificador distinto (`.debug`) para poder probarla sin alterar los datos de una instalación normal. Las pruebas instrumentadas se ejecutan en esta app separada, con registros sintéticos.
+
+Las pruebas de biometría necesitan un dispositivo de pruebas con bloqueo de pantalla y una huella registrada. En el emulador, registra una huella sintética en Ajustes de Android y envía el toque con `adb emu finger touch 1` cuando aparezca el diálogo del sistema. No se sustituye la autenticación por una respuesta simulada de la app.
 
 ```powershell
 .\gradlew.bat :app:connectedDebugAndroidTest

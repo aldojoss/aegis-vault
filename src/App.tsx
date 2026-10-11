@@ -49,6 +49,9 @@ export const App: React.FC = () => {
   const [saveError, setSaveError] = useState<string | null>(null);
   const savedRef = useRef(true);
   const unlockedRef = useRef(false);
+  const sessionEpochRef = useRef(0);
+  const foregroundRef = useRef(true);
+  const [biometric, setBiometric] = useState<{ available: boolean; enabled: boolean; reason?: string } | null>(null);
   const writerRef = useRef<ReturnType<typeof createVaultWriter> | null>(null);
   if (!writerRef.current) writerRef.current = createVaultWriter(async (content) => {
     if (window.electronAPI) {
@@ -78,6 +81,11 @@ export const App: React.FC = () => {
   const [isAuditOpen, setIsAuditOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const refreshBiometric = async () => {
+    try { const result = await window.electronAPI?.biometricStatus?.(); if (result) setBiometric(result); }
+    catch { setBiometric(null); }
+  };
+  useEffect(() => { void refreshBiometric(); }, [isLocked, isSettingsOpen, isFirstTime]);
 
   // Toast feedback & quick copy
   const [toast, setToast] = useState<ToastMessage | null>(null);
@@ -187,9 +195,11 @@ export const App: React.FC = () => {
   // Unlock Vault
   const handleUnlock = async (passwordInput: string): Promise<boolean> => {
     if (!encryptedPayload) return false;
+    const epoch = sessionEpochRef.current;
 
     try {
       const decrypted = await decryptVault(encryptedPayload, passwordInput);
+      if (epoch !== sessionEpochRef.current || !foregroundRef.current) return false;
       setVaultData(decrypted);
       setMasterPassword(passwordInput);
       unlockedRef.current = true;
@@ -204,8 +214,38 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleBiometricUnlock = async () => {
+    const epoch = sessionEpochRef.current;
+    const result = await window.electronAPI?.unlockBiometric?.();
+    if (!result || result.canceled || epoch !== sessionEpochRef.current || !foregroundRef.current) return false;
+    if (!result.success || !result.password) {
+      await refreshBiometric();
+      throw new Error(result.error || 'No se pudo usar la huella. Usa tu contraseña maestra.');
+    }
+    if (await handleUnlock(result.password)) return true;
+    if (epoch !== sessionEpochRef.current || !foregroundRef.current) return false;
+    await window.electronAPI?.disableBiometric?.();
+    await refreshBiometric();
+    throw new Error('La huella necesita activarse de nuevo. Entra con tu contraseña maestra y actívala en Configuración.');
+  };
+
+  const handleToggleBiometric = async () => {
+    if (!masterPassword || !unlockedRef.current) return;
+    try {
+      const result = biometric?.enabled
+        ? await window.electronAPI?.disableBiometric?.()
+        : await window.electronAPI?.enableBiometric?.(masterPassword);
+      await refreshBiometric();
+      if (result && 'canceled' in result && result.canceled) return;
+      if (!unlockedRef.current) return;
+      if (!result?.success) { showToast('No se pudo configurar la huella', result?.error, undefined, 'error'); return; }
+      showToast(biometric?.enabled ? 'Huella desactivada' : 'Huella activada', 'Tu contraseña maestra sigue disponible.');
+    } catch { if (unlockedRef.current) showToast('No se pudo configurar la huella', 'Reintenta desde Configuración.', undefined, 'error'); }
+  };
+
   // Create First-Time Vault
   const handleCreateVault = async (passwordInput: string) => {
+    const epoch = sessionEpochRef.current;
     const newVault: VaultData = {
       version: 1,
       createdAt: Date.now(),
@@ -215,6 +255,8 @@ export const App: React.FC = () => {
     };
 
     if (!await persistVault(newVault, passwordInput)) throw new Error('No se pudo guardar la bóveda. Reintenta antes de agregar contraseñas.');
+    setIsFirstTime(false);
+    if (epoch !== sessionEpochRef.current || !foregroundRef.current) return;
     setVaultData(newVault);
     setMasterPassword(passwordInput);
     unlockedRef.current = true;
@@ -228,6 +270,7 @@ export const App: React.FC = () => {
 
   // Lock Vault
   const handleLockVault = () => {
+    sessionEpochRef.current += 1;
     unlockedRef.current = false;
     setIsItemEditorOpen(false);
     setEditingItem(null);
@@ -247,9 +290,11 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     const background = () => {
+      foregroundRef.current = false;
       flushSync(() => handleLockVault());
       void window.electronAPI?.confirmLocked?.();
     };
+    const foreground = () => { foregroundRef.current = true; void refreshBiometric(); };
     const back = () => {
       if (isItemEditorOpen) { setIsItemEditorOpen(false); setEditingItem(null); }
       else if (pendingImport) setPendingImport(null);
@@ -263,12 +308,14 @@ export const App: React.FC = () => {
       else window.electronAPI?.close();
     };
     document.addEventListener('aegis:background', background);
+    document.addEventListener('aegis:foreground', foreground);
     document.addEventListener('aegis:back', back);
-    return () => { document.removeEventListener('aegis:background', background); document.removeEventListener('aegis:back', back); };
+    return () => { document.removeEventListener('aegis:background', background); document.removeEventListener('aegis:foreground', foreground); document.removeEventListener('aegis:back', back); };
   }, [isLocked, sidebarOpen, selectedItemId, pendingImport, isItemEditorOpen, isGeneratorOpen, isAuditOpen, isSettingsOpen, isChangePasswordOpen]);
 
   // Reset Vault (Erase and recreate)
   const handleResetVault = async () => {
+    sessionEpochRef.current += 1;
     if (window.electronAPI) {
       const result = await window.electronAPI.resetVault();
       if (!result.success) { showToast('No se pudo reiniciar', result.error, undefined, 'error'); return; }
@@ -276,6 +323,7 @@ export const App: React.FC = () => {
       localStorage.removeItem('aegis_vault_browser_fallback');
     }
     setEncryptedPayload(null);
+    await refreshBiometric();
     unlockedRef.current = false;
     setVaultData(null);
     setMasterPassword(null);
@@ -526,6 +574,12 @@ export const App: React.FC = () => {
     if (!isOk) return false;
 
     // Re-encrypt
+    // Remove the old wrapped credential before changing the vault password.
+    if (window.electronAPI?.disableBiometric) {
+      const result = await window.electronAPI.disableBiometric();
+      if (!result.success) throw new Error('No se pudo desactivar la huella. Reintenta antes de cambiar la contraseña.');
+      await refreshBiometric();
+    }
     if (!await persistVault(vaultData, newPass)) throw new Error('No se pudo guardar la nueva contraseña. La contraseña anterior sigue vigente.');
     if (unlockedRef.current) setMasterPassword(newPass);
     showToast('Contraseña Maestra Actualizada', 'Toda tu bóveda ha sido re-cifrada con la nueva clave');
@@ -893,6 +947,7 @@ export const App: React.FC = () => {
           onUnlock={handleUnlock}
           onCreateVault={handleCreateVault}
           onResetVault={handleResetVault}
+          onBiometricUnlock={biometric?.enabled && biometric.available ? handleBiometricUnlock : undefined}
         />
       )}
 
@@ -943,6 +998,8 @@ export const App: React.FC = () => {
             setIsChangePasswordOpen(true);
           }}
           onClose={() => setIsSettingsOpen(false)}
+          biometric={biometric}
+          onToggleBiometric={handleToggleBiometric}
         />
       )}
 
@@ -956,6 +1013,12 @@ export const App: React.FC = () => {
 
       {(isInitializing || startupError) && <div className="flex-1 flex items-center justify-center p-8"><div className="max-w-md text-center space-y-4"><Shield className="w-8 h-8 mx-auto text-stone-400" /><h2 className="text-lg text-stone-100">{isInitializing ? 'Abriendo tu bóveda…' : 'No se pudo abrir la bóveda'}</h2>{startupError && <><p role="alert" className="text-sm text-stone-400">{startupError}</p><p className="text-xs text-stone-500">Tus archivos se conservan. No crees una bóveda nueva para solucionar este error.</p><button onClick={() => location.reload()} className="primary-action px-4 py-2">Reintentar</button></>}</div></div>}
       {!isLocked && <footer className="vault-status flex items-center justify-between px-5 py-2 text-xs border-t border-stone-800"><span>{pendingSaves ? 'Guardando cambios…' : saveError ? 'Último cambio sin guardar. Reintenta la operación.' : 'Todos los cambios guardados'}</span><span>Almacenamiento local · Bóveda cifrada</span></footer>}
+      {!isLocked && <nav aria-label="Navegación principal" className="mobile-navigation">
+        <button aria-label="Ver bóveda" aria-current={!isGeneratorOpen && !isAuditOpen && !isSettingsOpen ? 'page' : undefined} disabled={pendingSaves > 0} onClick={() => { setSelectedItemId(null); setSidebarOpen(false); }}><Key className="w-5 h-5" /><span>Bóveda</span></button>
+        <button aria-label="Abrir generador" disabled={pendingSaves > 0} onClick={() => setIsGeneratorOpen(true)}><Wand2 className="w-5 h-5" /><span>Generar</span></button>
+        <button aria-label="Revisar seguridad" disabled={pendingSaves > 0} onClick={() => setIsAuditOpen(true)}><Shield className="w-5 h-5" /><span>Seguridad</span></button>
+        <button aria-label="Abrir ajustes" disabled={pendingSaves > 0} onClick={() => setIsSettingsOpen(true)}><Settings className="w-5 h-5" /><span>Ajustes</span></button>
+      </nav>}
       {/* 9. Toast Notification Pill */}
       <Toast toast={toast} onClose={() => setToast(null)} />
     </div>

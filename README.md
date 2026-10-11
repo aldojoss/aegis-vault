@@ -4,7 +4,7 @@ Gestor local de contraseñas para Windows y Android. Organiza inicios de sesión
 
 ## Instalar
 
-**Android:** descarga `Aegis-Vault-1.2.0-Android.apk` desde [las versiones publicadas](https://github.com/aldojoss/aegis-vault/releases). Requiere Android 8.0 o posterior. La primera versión móvil es gratuita, funciona sin conexión y empieza con una bóveda vacía. Consulta [ANDROID.md](ANDROID.md) para instalar, hacer respaldos y pasar registros desde Windows. La transferencia es manual; los dispositivos no se sincronizan automáticamente.
+**Android:** descarga `Aegis-Vault-1.2.1-Android.apk` desde [las versiones publicadas](https://github.com/aldojoss/aegis-vault/releases). Requiere Android 8.0 o posterior. Es gratuita, funciona sin conexión y empieza con una bóveda vacía. Incluye desbloqueo opcional con huella, navegación inferior y un diseño adaptado al teléfono. Consulta [ANDROID.md](ANDROID.md) para activar la huella, instalar, hacer respaldos y pasar registros desde Windows. La transferencia es manual; los dispositivos no se sincronizan automáticamente.
 
 **Windows:**
 

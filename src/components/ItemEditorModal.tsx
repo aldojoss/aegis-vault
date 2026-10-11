@@ -112,7 +112,7 @@ export const ItemEditorModal: React.FC<ItemEditorModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#191a1c]/85 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="w-full max-w-xl bg-[#242529] border border-[#383a3e] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="item-editor-panel w-full max-w-xl bg-[#242529] border border-[#383a3e] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-[#202124]">
           <div className="flex items-center space-x-2.5">
@@ -120,7 +120,7 @@ export const ItemEditorModal: React.FC<ItemEditorModalProps> = ({
               <KeyRound className="w-4 h-4" />
             </div>
             <h3 className="font-semibold text-sm text-white">
-              {itemToEdit ? 'Editar Elemento' : 'Nuevo Registro Seguro'}
+              {itemToEdit ? 'Editar elemento' : 'Nuevo elemento'}
             </h3>
           </div>
           <button

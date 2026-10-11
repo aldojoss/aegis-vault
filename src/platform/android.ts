@@ -12,6 +12,10 @@ interface NativeVault {
   getInfo(): ReturnType<ElectronAPI['getInfo']>;
   exit(): Promise<void>;
   confirmLocked(): Promise<void>;
+  biometricStatus(): ReturnType<NonNullable<ElectronAPI['biometricStatus']>>;
+  enableBiometric(options: { password: string }): ReturnType<NonNullable<ElectronAPI['enableBiometric']>>;
+  unlockBiometric(): ReturnType<NonNullable<ElectronAPI['unlockBiometric']>>;
+  disableBiometric(): ReturnType<NonNullable<ElectronAPI['disableBiometric']>>;
   addListener(event: string, callback: () => void): Promise<{ remove: () => Promise<void> }>;
 }
 export const isAndroid = () => Capacitor.getPlatform() === 'android';
@@ -31,10 +35,15 @@ export async function initializePlatform() {
     copyWithAutoClear: (text, clearSeconds = 30) => Native.copyWithAutoClear({ text, clearSeconds }),
     getInfo: () => Native.getInfo(),
     confirmLocked: () => Native.confirmLocked(),
+    biometricStatus: () => Native.biometricStatus(),
+    enableBiometric: password => Native.enableBiometric({ password }),
+    unlockBiometric: () => Native.unlockBiometric(),
+    disableBiometric: () => Native.disableBiometric(),
     minimize: () => {}, maximize: () => {}, close: () => { void Native.exit(); },
     isMaximized: async () => false,
     onMaximizedChange: () => () => {}, onBeforeClose: () => () => {}, finishClose: async () => {},
   };
   await Native.addListener('background', () => document.dispatchEvent(new Event('aegis:background')));
+  await Native.addListener('foreground', () => document.dispatchEvent(new Event('aegis:foreground')));
   await Native.addListener('back', () => document.dispatchEvent(new Event('aegis:back')));
 }

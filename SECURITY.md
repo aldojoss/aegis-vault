@@ -16,6 +16,14 @@ Android reutiliza el mismo formato cifrado. El archivo vive en almacenamiento pr
 
 La firma del APK permite instalar actualizaciones con la misma clave; no representa una auditoría del producto. Las claves de firma se conservan fuera del repositorio. Las pruebas instrumentadas usan una aplicación de depuración separada y datos sintéticos, nunca bóvedas personales.
 
+## Biometría de Android
+
+La activación es opcional y requiere una sesión desbloqueada y una autenticación del sistema. Una clave AES-256-GCM no exportable de Android Keystore cifra la contraseña maestra. Los datos privados contienen únicamente el IV y el texto cifrado; la clave requiere biometría fuerte en cada operación, sin ventana de validez ni alternativa con el PIN del dispositivo. El desbloqueo usa `BiometricPrompt` con `CryptoObject` y descifra después la bóveda con su contraseña original.
+
+Al registrar nuevas huellas Android invalida la clave; cambiar la contraseña maestra, reiniciar la bóveda o desactivar la función elimina el acceso biométrico. Una cancelación o un resultado recibido después de pasar a segundo plano no desbloquea la app. La contraseña maestra permite volver a entrar y reactivar la función. La clave biométrica no se exporta con los respaldos ni se transfiere a otro teléfono.
+
+Cualquier biometría fuerte registrada en el teléfono puede autorizar este acceso. Activa la función solo si confías en quienes tienen huellas o rostros registrados. La contraseña se descifra en memoria durante el desbloqueo; Java y JavaScript no garantizan borrar físicamente todas las copias. La aplicación no lee ni almacena plantillas de huellas.
+
 - Nunca adjuntes contraseñas, bóvedas, exportaciones, claves privadas ni datos personales a reportes de errores o commits.
 - La exportación JSON carece de cifrado. Los respaldos `.aegis`, `.enc` y `.bak` siguen siendo sensibles aunque estén cifrados.
 - Las copias del formato 1 pueden incluir el verificador antiguo de 2.000 iteraciones. Una nueva escritura elimina ese verificador en el archivo actual; las copias anteriores deben gestionarse por separado.

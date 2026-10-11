@@ -1,5 +1,14 @@
 # Cambios
 
+## 1.2.1 Android
+
+- Desbloqueo opcional con huella mediante el diálogo de Android y una clave de Keystore que exige biometría fuerte en cada uso.
+- Activación y desactivación desde Ajustes, contraseña maestra como alternativa y descarte de resultados tras bloquear la sesión.
+- Cambio de contraseña maestra desactiva la huella anterior para evitar conservar una credencial obsoleta.
+- Diseño móvil renovado: navegación inferior, controles táctiles más amplios, filas limpias y mejor distribución del detalle y Ajustes.
+- Crédito «Creado por Aldo Aviles» en la configuración inicial, el desbloqueo y Ajustes.
+- Iconos claros de las barras de Android sobre el tema oscuro.
+
 ## 1.2.0 Android
 
 - Primera app Android gratuita y sin anuncios, con bóveda vacía y almacenamiento privado cifrado.

@@ -59,9 +59,9 @@ export const VaultItemDetail: React.FC<VaultItemDetailProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col overflow-y-auto p-6 space-y-6">
+    <div className="vault-detail h-full flex flex-col overflow-y-auto p-6 space-y-6">
       {/* Top Header Card */}
-      <div className="flex items-start justify-between border-b border-slate-800/80 pb-5">
+      <div className="detail-header flex items-start justify-between border-b border-slate-800/80 pb-5">
         <div className="flex items-center space-x-3.5">
           <div className="w-12 h-12 rounded-lg bg-stone-800 border border-stone-700 flex items-center justify-center text-stone-300 shadow-md">
             {item.category === 'card' && <CreditCard className="w-6 h-6" />}
@@ -85,7 +85,7 @@ export const VaultItemDetail: React.FC<VaultItemDetailProps> = ({
                 <Star className={`w-4 h-4 ${item.favorite ? 'fill-amber-400' : ''}`} />
               </button>
             </div>
-            <div className="flex items-center space-x-2 text-[11px] text-slate-400 mt-0.5">
+            <div className="detail-metadata flex items-center space-x-2 text-[11px] text-slate-400 mt-0.5">
               <span className="capitalize px-2 py-0.5 rounded-full bg-slate-800 text-stone-200 font-medium">
                 {item.category}
               </span>
@@ -99,7 +99,7 @@ export const VaultItemDetail: React.FC<VaultItemDetailProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center space-x-2">
+        <div className="detail-actions flex items-center space-x-2">
           {item.url && (
             <a
               href={item.url.startsWith('http') ? item.url : `https://${item.url}`}
@@ -163,7 +163,7 @@ export const VaultItemDetail: React.FC<VaultItemDetailProps> = ({
                 Contraseña
               </span>
               {strength && (
-                <div className="flex items-center space-x-1.5 text-[11px]">
+                <div className="password-strength-label flex items-center space-x-1.5 text-[11px]">
                   <span className="text-slate-400">Fortaleza:</span>
                   <span style={{ color: strength.color }} className="font-semibold">
                     {strength.label} (estimación)

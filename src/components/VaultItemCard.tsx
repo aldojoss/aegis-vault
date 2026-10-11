@@ -64,7 +64,7 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
       aria-label={item.title}
       aria-pressed={isSelected}
       onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onSelect(); } }}
-      className={`group relative px-3 py-3 rounded-lg cursor-pointer transition-colors border border-transparent ${
+      className={`vault-list-item group relative px-3 py-3 rounded-lg cursor-pointer transition-colors border border-transparent ${
         isSelected
           ? 'bg-[#313634] border-stone-500  text-white'
           : 'bg-transparent hover:bg-[#292b2d] text-slate-300'
@@ -94,7 +94,7 @@ export const VaultItemCard: React.FC<VaultItemCardProps> = ({
         </div>
 
         {/* Hover / Right Actions */}
-        <div className="flex items-center space-x-1 pl-2">
+        <div className="list-item-actions flex items-center space-x-1 pl-2">
           {/* Strength dot indicator */}
           {strength && (
             <div
