@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-electron/
+
+# Logs & temp
+*.log
+.DS_Store
+.vscode/
+.idea/
+
+# Local credentials and personal vaults
+.env
+.env.*
+!.env.example
+*.aegis
+*.enc
+*.bak
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Generated installers, caches and test reports
+installer/
+coverage/
+test-results/
+playwright-report/
+.codebase-memory/
+*.tsbuildinfo
+
+# Original local demo data; do not publish credential-shaped records
+src/data/sampleVault.ts

@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+@layer base {
+  :root { color-scheme: dark; --bg-main: #191a1c; --bg-panel: #202124; --bg-card: #242529; --border-subtle: #323438; }
+  body { margin: 0; background: var(--bg-main); color: #e7e5e0; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; overflow: hidden; }
+  button, a, select { cursor: pointer; }
+  button:disabled { cursor: wait; opacity: .55; }
+  input, textarea { user-select: text; }
+  button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid #b5c4ac; outline-offset: 3px; }
+  input:focus, textarea:focus { outline: none; }
+}
+
+.titlebar-drag { -webkit-app-region: drag; }
+.titlebar-nodrag { -webkit-app-region: no-drag; }
+.primary-action { background: #c9d4c1; color: #20261e; border: 1px solid #c9d4c1; border-radius: 6px; transition: background .15s; }
+.primary-action:hover { background: #dce5d6; }
+.auth-layout { background: #191a1c; }
+.auth-intro { background: #202124; }
+.auth-heading { font-family: Georgia, 'Times New Roman', serif; letter-spacing: -.035em; font-weight: 400; }
+.auth-lock { background: #2c302b; color: #c9d4c1; border: 1px solid #414a3e; }
+.auth-input { border: 1px solid #414348; background: #202124; color: #eeede8; transition: border-color .15s; }
+.auth-input:focus { border-color: #a8b59f; box-shadow: 0 0 0 2px #a8b59f15; }
+.vault-status { background: #202124; color: #969b93; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #3c3f42; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #575b60; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
