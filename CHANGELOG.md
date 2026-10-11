@@ -1,5 +1,14 @@
 # Cambios
 
+## 1.2.0 Android
+
+- Primera app Android gratuita y sin anuncios, con bóveda vacía y almacenamiento privado cifrado.
+- Diseño adaptable al teléfono, menú lateral, lista y detalle independientes y navegación con el botón Atrás.
+- Guardado atómico, respaldo anterior y bloqueo al salir, con protección de capturas de pantalla.
+- Importación y exportación mediante el selector de archivos de Android. Las copias cifradas de Windows pueden usar una contraseña distinta de la bóveda móvil.
+- Validación de copias y conservación de registros existentes cuando sus identificadores coinciden.
+- APK firmado para instalación directa y actualizaciones; compilación reproducible y pruebas en una app de depuración separada.
+
 ## 1.1.1
 
 - Primera configuración con bóveda vacía y sin cuentas ni perfiles de demostración.

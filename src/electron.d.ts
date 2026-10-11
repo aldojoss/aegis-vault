@@ -13,6 +13,7 @@ export interface ElectronAPI {
   onBeforeClose: (callback: () => void) => () => void;
   finishClose: (saved: boolean) => Promise<void>;
   getInfo: () => Promise<{ version: string; vaultPath: string }>;
+  confirmLocked?: () => Promise<void>;
 }
 
 declare global {

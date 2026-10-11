@@ -122,3 +122,19 @@ it('removes an open editor and its plaintext fields when locking', async () => {
   expect(screen.queryByDisplayValue('synthetic-secret-value')).toBeNull();
   expect(screen.queryByRole('heading', { name: 'Editar Elemento' })).toBeNull();
 });
+
+it('locks and removes plaintext on the native background event', async () => {
+  const payload = await encryptVault({ version: 1, createdAt: 1, updatedAt: 1, items: [{ id: 'native-test', category: 'login', title: 'Synthetic mobile record', password: 'synthetic mobile secret', createdAt: 1, updatedAt: 1 }], settings: { autoLockMinutes: 15, clipboardClearSeconds: 30, theme: 'dark', showPasswordStrength: true } }, 'synthetic test password');
+  window.electronAPI!.loadVault = async () => ({ success: true, data: JSON.stringify(payload) });
+  window.electronAPI!.confirmLocked = vi.fn(async () => {});
+  render(<App />);
+  await screen.findByRole('heading', { name: 'Desbloquear Aegis Vault' });
+  fireEvent.change(screen.getByLabelText('Contraseña maestra'), { target: { value: 'synthetic test password' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Desbloquear bóveda' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Editar', exact: true }));
+  expect(screen.getByDisplayValue('synthetic mobile secret')).toBeTruthy();
+  fireEvent(document, new Event('aegis:background'));
+  expect(await screen.findByRole('heading', { name: 'Desbloquear Aegis Vault' })).toBeTruthy();
+  expect(screen.queryByDisplayValue('synthetic mobile secret')).toBeNull();
+  expect(window.electronAPI!.confirmLocked).toHaveBeenCalled();
+});

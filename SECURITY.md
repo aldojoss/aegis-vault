@@ -12,6 +12,10 @@ La ventana Electron usa aislamiento de contexto, sandbox y Node deshabilitado en
 
 ## Datos y respaldos
 
+Android reutiliza el mismo formato cifrado. El archivo vive en almacenamiento privado, usa `AtomicFile` y conserva el guardado anterior. Los fallos de lectura impiden ofrecer una bóveda nueva sobre el archivo existente. La app bloquea la sesión al pasar a segundo plano y oculta la WebView hasta confirmar el bloqueo. El selector de documentos del sistema tiene una excepción durante importaciones y exportaciones iniciadas por el usuario. `FLAG_SECURE` protege las capturas y las miniaturas; las copias automáticas de Android están deshabilitadas. El APK no solicita permisos de red ni acceso general a archivos.
+
+La firma del APK permite instalar actualizaciones con la misma clave; no representa una auditoría del producto. Las claves de firma se conservan fuera del repositorio. Las pruebas instrumentadas usan una aplicación de depuración separada y datos sintéticos, nunca bóvedas personales.
+
 - Nunca adjuntes contraseñas, bóvedas, exportaciones, claves privadas ni datos personales a reportes de errores o commits.
 - La exportación JSON carece de cifrado. Los respaldos `.aegis`, `.enc` y `.bak` siguen siendo sensibles aunque estén cifrados.
 - Las copias del formato 1 pueden incluir el verificador antiguo de 2.000 iteraciones. Una nueva escritura elimina ese verificador en el archivo actual; las copias anteriores deben gestionarse por separado.

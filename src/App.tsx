@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { flushSync } from 'react-dom';
 import {
   VaultData, VaultItem, EncryptedVaultPayload, VaultSettings, ItemCategory
 } from './types/vault';
@@ -16,13 +17,15 @@ import { SecurityAuditModal } from './components/SecurityAuditModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ChangePasswordModal } from './components/ChangePasswordModal';
 import { LegacyDemoReview } from './components/LegacyDemoReview';
+import { ImportVaultModal } from './components/ImportVaultModal';
+import { mergeImportedItems } from './utils/import-vault';
 import { Toast, ToastMessage } from './components/Toast';
 
 // Icons
 import {
   Plus, Search, Shield, ShieldAlert, Key, Globe, CreditCard,
   FileText, UserCheck, Server, Star, Trash2, Settings, Lock,
-  Wand2, ChevronDown, CheckCircle2, ArrowUpDown
+  Wand2, ChevronDown, CheckCircle2, ArrowUpDown, Menu, ArrowLeft
 } from 'lucide-react';
 import { evaluatePasswordStrength } from './utils/strength';
 
@@ -59,6 +62,14 @@ export const App: React.FC = () => {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'title-asc' | 'date-desc' | 'strength-asc'>('title-asc');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isPhone, setIsPhone] = useState(() => window.innerWidth < 800);
+  const [pendingImport, setPendingImport] = useState<{ content: string; fileName: string } | null>(null);
+  useEffect(() => {
+    const resize = () => setIsPhone(window.innerWidth < 800);
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
 
   // Modals
   const [isItemEditorOpen, setIsItemEditorOpen] = useState(false);
@@ -184,7 +195,7 @@ export const App: React.FC = () => {
       unlockedRef.current = true;
       setIsLocked(false);
       // Select first item if available
-      if (decrypted.items.length > 0 && !selectedItemId) {
+      if (decrypted.items.length > 0 && !selectedItemId && !isPhone) {
         setSelectedItemId(decrypted.items[0].id);
       }
       return true;
@@ -225,12 +236,36 @@ export const App: React.FC = () => {
     setIsSettingsOpen(false);
     setIsChangePasswordOpen(false);
     setSearchQuery('');
+    setPendingImport(null);
+    setSidebarOpen(false);
     setToast(null);
     setVaultData(null);
     setMasterPassword(null);
     setIsLocked(true);
     setSelectedItemId(null);
   };
+
+  useEffect(() => {
+    const background = () => {
+      flushSync(() => handleLockVault());
+      void window.electronAPI?.confirmLocked?.();
+    };
+    const back = () => {
+      if (isItemEditorOpen) { setIsItemEditorOpen(false); setEditingItem(null); }
+      else if (pendingImport) setPendingImport(null);
+      else if (isGeneratorOpen) setIsGeneratorOpen(false);
+      else if (isAuditOpen) setIsAuditOpen(false);
+      else if (isSettingsOpen) setIsSettingsOpen(false);
+      else if (isChangePasswordOpen) setIsChangePasswordOpen(false);
+      else if (sidebarOpen) setSidebarOpen(false);
+      else if (selectedItemId) setSelectedItemId(null);
+      else if (!isLocked) handleLockVault();
+      else window.electronAPI?.close();
+    };
+    document.addEventListener('aegis:background', background);
+    document.addEventListener('aegis:back', back);
+    return () => { document.removeEventListener('aegis:background', background); document.removeEventListener('aegis:back', back); };
+  }, [isLocked, sidebarOpen, selectedItemId, pendingImport, isItemEditorOpen, isGeneratorOpen, isAuditOpen, isSettingsOpen, isChangePasswordOpen]);
 
   // Reset Vault (Erase and recreate)
   const handleResetVault = async () => {
@@ -254,7 +289,8 @@ export const App: React.FC = () => {
     const seconds = vaultData?.settings.clipboardClearSeconds ?? 30;
 
     if (window.electronAPI) {
-      await window.electronAPI.copyWithAutoClear(text, seconds);
+      const result = await window.electronAPI.copyWithAutoClear(text, seconds);
+      if (!result.success) { showToast('No se pudo copiar', result.error, undefined, 'error'); return; }
     } else {
       await navigator.clipboard.writeText(text);
       if (seconds > 0) {
@@ -411,8 +447,10 @@ export const App: React.FC = () => {
 
     if (window.electronAPI) {
       const res = await window.electronAPI.exportVault({ content: payloadString, defaultName });
-      if (res.success) {
+      if (res.success && !res.canceled) {
         showToast('Respaldo Cifrado Exportado', 'Archivo guardado con éxito');
+      } else if (!res.success) {
+        showToast('No se pudo exportar', res.error, undefined, 'error');
       }
     } else {
       // Browser download fallback
@@ -436,8 +474,10 @@ export const App: React.FC = () => {
 
     if (window.electronAPI) {
       const res = await window.electronAPI.exportVault({ content: jsonString, defaultName });
-      if (res.success) {
+      if (res.success && !res.canceled) {
         showToast('Exportación Completada', 'Copia JSON sin cifrar guardada', undefined, 'warning');
+      } else if (!res.success) {
+        showToast('No se pudo exportar', res.error, undefined, 'error');
       }
     } else {
       const blob = new Blob([jsonString], { type: 'application/json' });
@@ -457,43 +497,24 @@ export const App: React.FC = () => {
 
     if (window.electronAPI) {
       const res = await window.electronAPI.importVault();
-      if (!res.success || !res.content) return;
-
-      try {
-        const parsed = JSON.parse(res.content);
-
-        // Check if it's an encrypted Aegis file or raw VaultData
-        if (parsed.cipherText && parsed.salt) {
-          // It's an encrypted Aegis vault file
-          try {
-            const importedVault = await decryptVault(parsed, masterPassword);
-            const mergedItems = [...vaultData.items];
-            importedVault.items.forEach((item) => {
-              if (!mergedItems.some((m) => m.id === item.id)) {
-                mergedItems.push(item);
-              }
-            });
-            const updatedVault = { ...vaultData, items: mergedItems, updatedAt: Date.now() };
-            if (!await persistVault(updatedVault, masterPassword)) return;
-            if (!unlockedRef.current) return;
-            setVaultData(updatedVault);
-            showToast('Bóveda Importada', `${importedVault.items.length} registros sincronizados`);
-          } catch {
-            showToast('Error de Importación', 'La contraseña de la copia no coincide con la actual', undefined, 'error');
-          }
-        } else if (parsed.items && Array.isArray(parsed.items)) {
-          // Raw Vault JSON
-          const merged = [...vaultData.items, ...parsed.items];
-          const updatedVault = { ...vaultData, items: merged, updatedAt: Date.now() };
-          if (!await persistVault(updatedVault, masterPassword)) return;
-          if (!unlockedRef.current) return;
-          setVaultData(updatedVault);
-          showToast('Importación Exitosa', `${parsed.items.length} elementos agregados`);
-        }
-      } catch (e: any) {
-        showToast('Error de lectura', 'El formato del archivo no es compatible', undefined, 'error');
-      }
+      if (!unlockedRef.current || res.canceled) return;
+      if (!res.success || !res.content) { showToast('No se pudo importar', res.error, undefined, 'error'); return; }
+      setIsSettingsOpen(false);
+      setPendingImport({ content: res.content, fileName: res.fileName || 'Copia de Aegis' });
+    } else {
+      showToast('Importación disponible en la aplicación instalada', undefined, undefined, 'info');
     }
+  };
+
+  const handleImportVault = async (imported: VaultData) => {
+    if (!vaultData || !masterPassword || !unlockedRef.current) return false;
+    const items = mergeImportedItems(vaultData.items, imported.items);
+    const updatedVault = { ...vaultData, items, updatedAt: Date.now() };
+    if (!await persistVault(updatedVault, masterPassword) || !unlockedRef.current) return false;
+    setVaultData(updatedVault);
+    setPendingImport(null);
+    showToast('Copia importada', `${items.length - vaultData.items.length} registros nuevos`);
+    return true;
   };
 
   // Change Master Password
@@ -584,7 +605,7 @@ export const App: React.FC = () => {
   }, [vaultData]);
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#191a1c] text-slate-100 overflow-hidden font-sans select-none">
+    <div data-view={isPhone && selectedItemId ? 'detail' : 'list'} className="app-shell h-screen w-screen flex flex-col bg-[#191a1c] text-slate-100 overflow-hidden font-sans select-none">
       {/* 1. Custom Frameless Window TitleBar */}
       <TitleBar
         isLocked={isLocked}
@@ -593,10 +614,15 @@ export const App: React.FC = () => {
       />
 
       {/* 2. Main Content Layout */}
+      {!isLocked && <div className="mobile-toolbar items-center justify-between gap-3 px-4 py-2 border-b border-stone-800">
+        <button className="flex gap-2 items-center text-sm" onClick={() => selectedItemId ? setSelectedItemId(null) : setSidebarOpen(!sidebarOpen)} aria-label={selectedItemId ? 'Volver a la lista' : 'Abrir menú'}>{selectedItemId ? <ArrowLeft className="w-5 h-5" /> : <Menu className="w-5 h-5" />}<span>{selectedItemId ? 'Mis registros' : 'Mi bóveda'}</span></button>
+        <button className="primary-action p-2" aria-label="Añadir registro" onClick={() => { setEditingItem(null); setIsItemEditorOpen(true); }}><Plus className="w-5 h-5" /></button>
+      </div>}
       {!isLocked && vaultData && <LegacyDemoReview items={vaultData.items} onMoveToTrash={handleTrashLegacyExamples} />}
+      {sidebarOpen && !isLocked && <button className="sidebar-dismiss" aria-label="Cerrar menú" onClick={() => setSidebarOpen(false)} />}
       {!isLocked && <div className={`flex-1 flex overflow-hidden ${pendingSaves ? "pointer-events-none" : ""}`} aria-busy={pendingSaves > 0}>
         {/* Left Sidebar */}
-        <aside className="w-56 bg-[#202124] border-r border-[#323438] flex flex-col shrink-0 select-none">
+        <aside className={`app-sidebar ${sidebarOpen ? 'is-open' : ''} w-56 bg-[#202124] border-r border-[#323438] flex flex-col shrink-0 select-none`} onClick={event => { if ((event.target as HTMLElement).closest('button')) setSidebarOpen(false); }}>
           {/* New Item Primary Button */}
           <div className="p-3.5 border-b border-[#323438]">
             <button
@@ -776,7 +802,7 @@ export const App: React.FC = () => {
         </aside>
 
         {/* Middle Column: Items List */}
-        <section className="w-80 bg-[#1b1c1f] border-r border-[#323438] flex flex-col shrink-0">
+        <section className="app-list w-80 bg-[#1b1c1f] border-r border-[#323438] flex flex-col shrink-0">
           {/* Search & Sort Bar */}
           <div className="p-3.5 border-b border-[#323438] space-y-2">
             <div className="relative">
@@ -835,7 +861,7 @@ export const App: React.FC = () => {
         </section>
 
         {/* Right Column: Item Inspection Pane */}
-        <main className="flex-1 bg-[#191a1c] flex flex-col overflow-hidden">
+        <main className="app-detail flex-1 bg-[#191a1c] flex flex-col overflow-hidden">
           <VaultItemDetail
             key={selectedItem?.id || 'empty'}
             item={selectedItem}
@@ -871,6 +897,7 @@ export const App: React.FC = () => {
       )}
 
       {/* 4. Item Editor Modal (Create / Edit) */}
+      {pendingImport && !isLocked && <ImportVaultModal content={pendingImport.content} fileName={pendingImport.fileName} onClose={() => setPendingImport(null)} onImport={handleImportVault} />}
       {isItemEditorOpen && (
         <ItemEditorModal
           itemToEdit={editingItem}

@@ -151,8 +151,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
               <div className="flex items-center justify-between border-t border-slate-800/80 pt-3">
                 <div>
-                  <span className="text-xs font-medium text-white block">Importar Datos (Aegis / JSON / CSV)</span>
-                  <span className="text-[11px] text-slate-400">Restaura un respaldo o importa desde otros gestores</span>
+                  <span className="text-xs font-medium text-white block">Importar copia (Aegis / JSON)</span>
+                  <span className="text-[11px] text-slate-400">Añade registros desde otra bóveda de Aegis</span>
                 </div>
                 <button
                   onClick={onImportFile}

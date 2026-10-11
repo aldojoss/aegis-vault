@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Minus, Square, X, Shield, Lock } from 'lucide-react';
 import { version } from '../../package.json';
+import { isAndroid } from '../platform/android';
 
 interface TitleBarProps {
   isLocked: boolean;
@@ -57,7 +58,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ isLocked, onLockClick, vault
       </div>
 
       {/* Native Window Controls */}
-      <div className="titlebar-nodrag flex items-center space-x-1">
+      {!isAndroid() && <div className="window-controls titlebar-nodrag flex items-center space-x-1">
         <button
           onClick={handleMinimize}
           className="w-7 h-7 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400 hover:text-white transition"
@@ -79,7 +80,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({ isLocked, onLockClick, vault
         >
           <X className="w-3.5 h-3.5" />
         </button>
-      </div>
+      </div>}
     </div>
   );
 };

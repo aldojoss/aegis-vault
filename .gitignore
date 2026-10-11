@@ -33,3 +33,10 @@ playwright-report/
 
 # Original local demo data; do not publish credential-shaped records
 src/data/sampleVault.ts
+
+# Android signing and local device configuration
+*.jks
+*.keystore
+android/keystore.properties
+android/local.properties
+android/**/google-services.json

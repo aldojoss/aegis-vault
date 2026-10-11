@@ -22,6 +22,30 @@
 .auth-input { border: 1px solid #414348; background: #202124; color: #eeede8; transition: border-color .15s; }
 .auth-input:focus { border-color: #a8b59f; box-shadow: 0 0 0 2px #a8b59f15; }
 .vault-status { background: #202124; color: #969b93; }
+.app-shell { height: 100dvh; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+.mobile-toolbar, .sidebar-dismiss { display: none; }
+@media (max-width: 799px) {
+  .mobile-toolbar { display: flex; flex-shrink: 0; }
+  .window-controls { display: none; }
+  .app-sidebar { display: none; }
+  .app-sidebar.is-open { display: flex; position: absolute; top: 90px; bottom: env(safe-area-inset-bottom); left: 0; z-index: 40; width: min(80vw, 280px); overflow-y: auto; }
+  .sidebar-dismiss { display: block; position: fixed; inset: 80px 0 0; z-index: 30; background: #0009; }
+  .app-list { width: 100%; min-width: 0; border: 0; flex: 1; }
+  .app-detail { display: none; min-width: 0; }
+  [data-view="detail"] .app-list { display: none; }
+  [data-view="detail"] .app-detail { display: flex; }
+  .app-detail > div > div:first-child { flex-wrap: wrap; gap: 16px; padding: 16px; }
+  .app-detail h2 { overflow-wrap: anywhere; }
+  .app-detail .font-mono { overflow-wrap: anywhere; word-break: break-word; }
+  .app-shell > .vault-status { gap: 10px; font-size: 10px; }
+  .fixed.inset-0 > .max-w-xl, .fixed.inset-0 > .max-w-md, .fixed.inset-0 > .max-w-2xl { max-height: 94dvh; }
+  .fixed.inset-0 { padding: 12px; }
+  button { touch-action: manipulation; }
+  .mobile-toolbar button { min-height: 44px; }
+  .app-sidebar button { min-height: 44px; }
+  input, textarea, select { font-size: 16px !important; }
+  .auth-layout section { padding: 24px; }
+}
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #3c3f42; border-radius: 4px; }

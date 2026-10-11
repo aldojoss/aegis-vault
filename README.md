@@ -1,8 +1,12 @@
 # Aegis Vault
 
-Gestor local de contraseñas para Windows. Organiza inicios de sesión, tarjetas, notas, identidades y servidores en una bóveda cifrada. No requiere una cuenta ni un servidor.
+Gestor local de contraseñas para Windows y Android. Organiza inicios de sesión, tarjetas, notas, identidades y servidores en una bóveda cifrada. No requiere una cuenta ni un servidor.
 
 ## Instalar
+
+**Android:** descarga `Aegis-Vault-1.2.0-Android.apk` desde [las versiones publicadas](https://github.com/aldojoss/aegis-vault/releases). Requiere Android 8.0 o posterior. La primera versión móvil es gratuita, funciona sin conexión y empieza con una bóveda vacía. Consulta [ANDROID.md](ANDROID.md) para instalar, hacer respaldos y pasar registros desde Windows. La transferencia es manual; los dispositivos no se sincronizan automáticamente.
+
+**Windows:**
 
 Descarga el instalador de Windows desde la [última versión publicada](https://github.com/aldojoss/aegis-vault/releases/latest). Abre el archivo `Aegis-Vault-Setup-1.1.1.exe` y sigue el asistente. El instalador todavía no tiene firma digital.
 
@@ -15,6 +19,8 @@ Algunas versiones antiguas incluían registros de demostración. Si están guard
 El código fuente publicado no incluye bóvedas, exportaciones ni datos personales. Los binarios se distribuyen solo en Releases. Para compartir la app, envía el enlace de la última versión, nunca tu archivo de bóveda.
 
 ## Dónde se guardan los datos
+
+Android guarda el archivo cifrado en el almacenamiento privado de la aplicación, con escritura atómica y una copia del guardado anterior. No usa el almacenamiento local del navegador. Las copias automáticas de Android están deshabilitadas: exporta un respaldo cifrado antes de desinstalar, borrar los datos o cambiar de teléfono.
 
 La aplicación de escritorio guarda el archivo en:
 
@@ -39,6 +45,8 @@ npm run electron:dev     # Compila y abre la app de escritorio
 npm run check            # TypeScript, pruebas y compilación
 npm run dist             # Genera el instalador Windows en dist-electron/
 ```
+
+Para compilar Android, consulta [los requisitos de compilación y firma](ANDROID.md#compilar).
 
 ## Cambios en 1.1.0
 

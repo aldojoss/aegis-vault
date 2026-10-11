@@ -1,7 +1,7 @@
 {
   "name": "aegis-vault",
-  "version": "1.1.1",
-  "description": "Gestor local de contraseñas para Windows con bóveda cifrada y respaldos",
+  "version": "1.2.0",
+  "description": "Gestor local de contraseñas para Windows y Android con bóveda cifrada",
   "main": "electron/main.cjs",
   "author": "Aegis Security",
   "license": "MIT",
@@ -15,9 +15,13 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check": "npm run typecheck && npm test && npm run build",
-    "verify:distribution": "node scripts/verify-distribution.mjs"
+    "verify:distribution": "node scripts/verify-distribution.mjs",
+    "android:sync": "npm run build && cap sync android",
+    "android:open": "cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
     "clsx": "^2.1.1",
     "lucide-react": "^0.460.0",
     "react": "^18.3.1",
@@ -25,6 +29,7 @@
     "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",
